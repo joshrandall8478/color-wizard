@@ -375,6 +375,36 @@ async def help_command(interaction: nextcord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+@bot.slash_command(name="about", description="Learn about the Color Wizard bot")
+async def about_command(interaction: nextcord.Interaction):
+    """Display information about the bot and credits."""
+    embed = nextcord.Embed(
+        title="About Color Wizard",
+        description="A Discord bot that lets you pick custom name colors!",
+        color=nextcord.Color.blurple(),
+    )
+
+    embed.add_field(
+        name="Author",
+        value="Joshua Randall",
+        inline=True,
+    )
+
+    embed.add_field(
+        name="Repository",
+        value="[GitHub](https://github.com/joshrandall8478/color-wizard)",
+        inline=True,
+    )
+
+    embed.add_field(
+        name="Development",
+        value="Built with assistance from Claude AI",
+        inline=False,
+    )
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 def main():
     token = os.getenv("DISCORD_TOKEN")
     if not token:
