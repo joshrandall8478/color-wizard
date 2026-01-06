@@ -1,0 +1,10 @@
+name: color-wizard
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - nextcord>=2.6.0
+      - webcolors>=1.13
