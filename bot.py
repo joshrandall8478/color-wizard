@@ -239,6 +239,17 @@ async def pick_color(
                 reason=f"Color role created by {member.display_name}",
             )
             print(f"Created new role: {role_name}")
+
+            # Move the role near the top (just below bot's highest role)
+            bot_member = guild.me
+            if bot_member and bot_member.top_role.position > 1:
+                target_position = bot_member.top_role.position - 1
+                try:
+                    await existing_role.edit(position=target_position)
+                    print(f"Moved role {role_name} to position {target_position}")
+                except nextcord.HTTPException as e:
+                    # Role positioning failed, but role was still created
+                    print(f"Could not reposition role: {e}")
         except nextcord.Forbidden:
             await interaction.followup.send(
                 "I don't have permission to create roles. "
