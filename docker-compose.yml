@@ -1,7 +1,6 @@
 services:
   bot:
-    build: .
-    restart: unless-stopped
+    image: ghcr.io/joshrandall8478/color-wizard:latest
     env_file:
       - .env
     environment:
