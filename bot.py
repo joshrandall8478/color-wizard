@@ -1,6 +1,7 @@
 import os
 import re
 import nextcord
+import argparse
 from nextcord.ext import commands
 from nextcord import SlashOption
 import webcolors
@@ -416,11 +417,120 @@ async def about_command(interaction: nextcord.Interaction):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+@bot.slash_command(name="clear", description="Remove your current color role")
+async def clear_color(interaction: nextcord.Interaction):
+    """Remove the user's current color role."""
+    await interaction.response.defer(ephemeral=True)
+
+    guild = interaction.guild
+    if guild is None:
+        await interaction.followup.send(
+            "This command can only be used in a server.",
+            ephemeral=True,
+        )
+        return
+
+    member = interaction.user
+    if not isinstance(member, nextcord.Member):
+        await interaction.followup.send(
+            "Could not retrieve your member information.",
+            ephemeral=True,
+        )
+        return
+
+    color_roles_to_remove = [
+        role for role in member.roles
+        if role.name.startswith("color-")
+    ]
+
+    if not color_roles_to_remove:
+        await interaction.followup.send(
+            "You don't have any color roles to remove.",
+            ephemeral=True,
+        )
+        return
+
+    try:
+        await member.remove_roles(*color_roles_to_remove, reason="User cleared their color")
+        await interaction.followup.send(
+            "Your color role has been removed.",
+            ephemeral=True,
+        )
+    except nextcord.Forbidden:
+        await interaction.followup.send(
+            "I don't have permission to manage your roles. "
+            "Please make sure my role is above the color roles.",
+            ephemeral=True,
+        )
+    except nextcord.HTTPException as e:
+        await interaction.followup.send(
+            f"Failed to remove roles: {e}",
+            ephemeral=True,
+        )
+
+@bot.slash_command(name="nuke-all-colors", description="Delete all color roles from the server (Admin only)")
+async def nuke_all_colors(interaction: nextcord.Interaction):
+    """Delete all color roles from the server. Admin only."""
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            "You don't have permission to use this command.",
+            ephemeral=True,
+        )
+        return
+
+    guild = interaction.guild
+    if guild is None:
+        await interaction.response.send_message(
+            "This command can only be used in a server.",
+            ephemeral=True,
+        )
+        return
+
+    color_roles = [role for role in guild.roles if role.name.startswith("color-")]
+
+    if not color_roles:
+        await interaction.response.send_message(
+            "No color roles found to delete.",
+            ephemeral=True,
+        )
+        return
+
+    deleted_count = 0
+    for role in color_roles:
+        try:
+            await role.delete(reason=f"Deleted by {interaction.user.display_name} using nuke command")
+            deleted_count += 1
+        except nextcord.Forbidden:
+            await interaction.followup.send(
+                f"Failed to delete role {role.name} due to permissions.",
+                ephemeral=True,
+            )
+        except nextcord.HTTPException as e:
+            await interaction.followup.send(
+                f"Failed to delete role {role.name}: {e}",
+                ephemeral=True,
+            )
+
+    await interaction.response.send_message(
+        f"Deleted {deleted_count} color role(s).",
+        ephemeral=True,
+    )
+
 
 def main():
-    token = os.getenv("DISCORD_TOKEN")
+    parser =  argparse.ArgumentParser()
+    parser.add_argument(
+        "--token",
+        type=str,
+        help="Discord bot token (can also be set via DISCORD_TOKEN environment variable)",
+    )
+    args = parser.parse_args()
+    if not os.getenv("DISCORD_TOKEN"):
+        token = args.token
+    else:
+        token = os.getenv("DISCORD_TOKEN")
     if not token:
-        print("Error: DISCORD_TOKEN environment variable is not set!")
+        print("Error: DISCORD_TOKEN environment variable is not set, or --token argument not provided!")
         print("Please set it in your .env file or environment.")
         exit(1)
 

@@ -1,2 +1,2 @@
-nextcord==2.6.0
-webcolors==1.13
+nextcord>=2.6.0
+webcolors>=1.13
