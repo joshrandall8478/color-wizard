@@ -12,11 +12,13 @@ def parse_hex_color(color_input: str) -> int | None:
     color_input = color_input.strip().lstrip("#")
 
     if re.match(r"^[0-9A-Fa-f]{6}$", color_input):
-        return int(color_input, 16)
+        value = int(color_input, 16)
+        return 0x030303 if value == 0 else value
 
     if re.match(r"^[0-9A-Fa-f]{3}$", color_input):
         expanded = "".join(c * 2 for c in color_input)
-        return int(expanded, 16)
+        value = int(expanded, 16)
+        return 0x030303 if value == 0 else value
 
     return None
 
@@ -25,7 +27,11 @@ def color_name_to_hex(color_name: str) -> int | None:
     """Convert a color name to hex integer using webcolors library."""
     try:
         hex_value = webcolors.name_to_hex(color_name.lower().strip())
-        return int(hex_value.lstrip("#"), 16)
+        value = int(hex_value.lstrip("#"), 16)
+        # Discord renders #000000 as no color; use near-black instead
+        if value == 0x000000:
+            return 0x030303
+        return value
     except ValueError:
         return None
 
@@ -145,7 +151,8 @@ def parse_vague_color(color_input: str) -> int | None:
 
     # Convert to RGB then to integer
     r, g, b = hsl_to_rgb(h, s, l)
-    return (r << 16) | (g << 8) | b
+    value = (r << 16) | (g << 8) | b
+    return 0x030303 if value == 0 else value
 
 
 def get_color_from_input(color_input: str) -> tuple[int | None, str]:
